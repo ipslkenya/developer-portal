@@ -1,0 +1,147 @@
+openapi: 3.0.3
+info:
+  title: Pesalink API
+  version: "1.0.0"
+  description: >
+    Placeholder specification for the Pesalink Developer Portal. Replace with
+    the official API definition before production launch.
+servers:
+  - url: https://api.sandbox.pesalink.co.ke/v1
+    description: Sandbox environment
+  - url: https://api.pesalink.co.ke/v1
+    description: Production environment
+paths:
+  /payments:
+    post:
+      summary: Initiate an instant payment
+      operationId: createPayment
+      tags:
+        - Payments
+      security:
+        - OAuth2: [payments.write]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentRequest"
+      responses:
+        "201":
+          description: Payment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /payments/{paymentId}:
+    get:
+      summary: Retrieve payment status
+      operationId: getPayment
+      tags:
+        - Payments
+      security:
+        - OAuth2: [payments.read]
+      parameters:
+        - name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Payment status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentResponse"
+        "404":
+          description: Payment not found
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: OAuth2 client credentials flow.
+      flows:
+        clientCredentials:
+          tokenUrl: https://identity.sandbox.pesalink.co.ke/oauth2/token
+          scopes:
+            payments.write: Initiate payments
+            payments.read: Read payment status
+            accounts.read: Access account information
+  schemas:
+    PaymentRequest:
+      type: object
+      required:
+        - sourceAccount
+        - destinationAccount
+        - amount
+      properties:
+        sourceAccount:
+          type: string
+          example: "34002349872"
+        destinationAccount:
+          type: string
+          example: "017200234987"
+        amount:
+          $ref: "#/components/schemas/Money"
+        narration:
+          type: string
+          maxLength: 160
+          example: Invoice 1042
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+    PaymentResponse:
+      type: object
+      properties:
+        paymentId:
+          type: string
+          example: pay_21bca982
+        status:
+          type: string
+          enum: [PENDING, SETTLED, FAILED]
+        amount:
+          $ref: "#/components/schemas/Money"
+        createdAt:
+          type: string
+          format: date-time
+        links:
+          type: object
+          properties:
+            self:
+              type: string
+              format: uri
+    Money:
+      type: object
+      required:
+        - value
+        - currency
+      properties:
+        value:
+          type: number
+          format: double
+          example: 25000
+        currency:
+          type: string
+          example: KES
+  responses:
+    UnauthorizedError:
+      description: Access token is invalid or expired
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    code:
+                      type: string
+                      example: "40102"
+                    message:
+                      type: string
+                      example: Expired access token.
