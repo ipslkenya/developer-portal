@@ -15,7 +15,7 @@ export function SiteHeader() {
       <div className="container top-nav__content">
         <Link href="/" className="brand">
           <Image
-            src="https://pesalink.co.ke/storage/images/logos/pesalink-logo-dark.png"
+            src="/pesalink-logo-dark.png"
             alt="Pesalink logo"
             width={156}
             height={44}
